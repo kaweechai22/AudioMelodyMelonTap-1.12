@@ -1,0 +1,22 @@
+# MelodyMelonTap Clean Stable v19
+
+Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟเฟกต์ออก เหลือระบบหลักที่เสถียร
+
+
+## v19.1 Audio Retry Fix
+- ปรับเงื่อนไข “ผลการวัดยังไม่นิ่ง” ไม่ให้เข้มเกินไป
+- หากสัญญาณไม่นิ่งเล็กน้อย แอปจะแสดงผลต่อ พร้อมหมายเหตุให้วัดซ้ำเพื่อยืนยัน
+- จะบังคับวัดใหม่เฉพาะกรณีสัญญาณแย่มากจริง ๆ
+
+
+## v20 Raw2 Logic Restore
+- กลับมาใช้สมการ Brix/Firmness/Juice/Hollow และ classifyRipenessAI จากชุด Raw2/v7 ซึ่งผู้ทดสอบพบว่าแม่นกว่า
+- คง UI clean, 5 taps, audiofix และ AI Voice แบบธรรมชาติไว้
+- ยกเลิกการใช้ Perfect Ripe เป็นตัวตัดสินระดับการสุกหลัก
+
+
+## v21 Audio50 Model
+- ใช้สมการจากการวิเคราะห์คลิปเสียงดิบ 50 คลิป
+- เพิ่ม feature: rolloff85/95, entropy, spectral slope, band energy, harmonic3
+- ระดับสุกใช้ logistic audio classifier จากเสียงดิบ
+- รูปแบบ UI/Voice ใช้ฐานเดียวกับ v20
