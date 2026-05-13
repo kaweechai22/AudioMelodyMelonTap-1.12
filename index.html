@@ -48,7 +48,7 @@
 <body>
 <div class="wrap">
   <h1>MelodyMelonTap 🎤🍉</h1>
-  <div class="version">Version: v2026.05.13-hybrid-audio120-v22.6-ripeness-hollowfix</div>
+  <div class="version">Version: v2026.05.13-hybrid-audio120-v22.7-test5-tuned</div>
   <div class="voiceNote">🎙 AI Voice Summary อ่านสรุปผลแบบภาษาคน ไม่อ่านตัวเลขยาว</div>
 
   <div class="card">
@@ -137,7 +137,7 @@ function spread(values){const vals=values.filter(Number.isFinite);return vals.le
 function getRMS(samples){let s=0;for(let i=0;i<samples.length;i++)s+=samples[i]*samples[i];return Math.sqrt(s/samples.length);}
 function movingAverage(arr,win=3){return arr.map((_,i)=>{let a=Math.max(0,i-1),b=Math.min(arr.length,i+2),s=0;for(let j=a;j<b;j++)s+=arr[j];return s/(b-a);});}
 
-function sweetnessLabel(brix){if(brix<8)return"หวานน้อย";if(brix<10.8)return"หวาน";if(brix<12)return"หวานมาก";return"หวานเจี๊ยบ";}
+function sweetnessLabel(brix){if(brix<8)return"หวานน้อย";if(brix<10.8)return"หวานอ่อน";if(brix<12)return"หวานดี";return"หวานมาก";}
 function juiceLabel(juice){if(juice<50)return"ฉ่ำน้อย";if(juice<63)return"ฉ่ำกำลังดี";return"ฉ่ำมาก";}
 function crispPercent(firmness){return clamp(((firmness-5)/(20-5))*100,0,100);}
 function crispLabel(p){if(p<20)return"เนื้อนิ่มมาก";if(p<40)return"เนื้อค่อนข้างนิ่ม";if(p<60)return"เนื้อปานกลาง";if(p<80)return"เนื้อแน่นกำลังดี";return"เนื้อแน่นกรอบ";}
@@ -304,7 +304,7 @@ function perfectRipeDistance(brix,firmness,juice,hollow,Q,tau){
   return Math.sqrt(Math.pow((brix-t.brix)/1.4,2)+Math.pow((firmness-t.firmness)/4.5,2)+Math.pow((juice-t.juice)/7.5,2)+Math.pow((hollow-t.hollow)/7,2)+Math.pow((Q-t.Q)/2.8,2)+Math.pow((tau-t.tau)/0.05,2));
 }
 function perfectRipeMeter(d){return clamp(100-d*18,0,100);}
-function perfectRipeLabel(score){if(score<35)return{group:"E",text:"ดิบ"};if(score<60)return{group:"D",text:"ใกล้สุก"};if(score<85)return{group:"C",text:"สุกพอดี"};return{group:"B",text:"สุกเกิน"};}
+function perfectRipeLabel(score){if(score<35)return{group:"E",text:"ดิบ"};if(score<60)return{group:"D",text:"ใกล้สุก"};if(score<85)return{group:"C",text:"สุกพอดี"};return{group:"B",text:"สุกมากพอดีกิน"};}
 
 async function setupAudio(){
   if(!audioContext) audioContext=new (window.AudioContext||window.webkitAudioContext)();
@@ -560,6 +560,71 @@ function calibrateHollowFieldV226(rawHollowPercent, currentHollowPercent, finalG
   return clamp(h, 0, 45);
 }
 
+
+// ===== TEST5 Field Tuning v22.7 =====
+function classifyRipenessFieldV227(fMean, lowRatio, flatness, fPeak, firmnessApp){
+  if(fMean <= 576.39){
+    if(lowRatio <= 0.28){
+      if(flatness <= 0.86) return "C";
+      return "B";
+    }else{
+      if(fPeak <= 251.96) return "A";
+      if(firmnessApp <= 25.58) return "B";
+      return "A";
+    }
+  }
+  return "D";
+}
+
+function calibrateHollowFieldV227(hollowPercent){
+  return clamp(hollowPercent + 0.65, 0, 45);
+}
+
+function calibrateBrixFieldV227(rawBrix, Q, fMean, fStd, hollowIndex, lowRatio, flatness, band150300, rolloff85, peakCount){
+  let y = 34.05303931;
+  y += -0.8725535409 * safe(rawBrix,0); // brix_app
+  y += 0.01580385011 * safe(Q,0); // Q
+  y += -0.02412794495 * safe(fMean,0); // f_mean
+  y += -0.001936959828 * safe(fStd,0); // f_std
+  y += -9.058130684 * safe(hollowIndex,0); // hollow_index
+  y += 6.634628269 * safe(lowRatio,0); // low_ratio
+  y += -1.00495137 * safe(flatness,0); // flatness
+  y += -1.625781807 * safe(band150300,0); // band_150_300
+  y += 0.00545197905 * safe(rolloff85,0); // rolloff85
+  y += -0.05576215563 * safe(peakCount,0); // peak_count
+  return clamp(y,7,15);
+}
+
+function calibrateFirmnessFieldV227(rawFirmness, Q, fMean, fStd, hollowIndex, lowRatio, flatness, band150300, rolloff85, peakCount){
+  let y = -75.38585414;
+  y += 1.026848678 * safe(rawFirmness,0); // firmness_app
+  y += 0.345572688 * safe(Q,0); // Q
+  y += 0.1727779902 * safe(fMean,0); // f_mean
+  y += -0.2603855866 * safe(fStd,0); // f_std
+  y += 203.9153187 * safe(hollowIndex,0); // hollow_index
+  y += -96.46425817 * safe(lowRatio,0); // low_ratio
+  y += 23.48036512 * safe(flatness,0); // flatness
+  y += 17.82136841 * safe(band150300,0); // band_150_300
+  y += -0.06377266223 * safe(rolloff85,0); // rolloff85
+  y += -0.2387302737 * safe(peakCount,0); // peak_count
+  return clamp(y,0,40);
+}
+
+function calibrateJuiceFieldV227(rawJuice, Q, fMean, fStd, hollowIndex, lowRatio, flatness, band150300, rolloff85, peakCount){
+  let y = 250.1177768;
+  y += -0.9230081172 * safe(rawJuice,0); // juice_app
+  y += 0.4333387228 * safe(Q,0); // Q
+  y += -0.2730292667 * safe(fMean,0); // f_mean
+  y += 0.1632822028 * safe(fStd,0); // f_std
+  y += -60.05458134 * safe(hollowIndex,0); // hollow_index
+  y += -40.9019421 * safe(lowRatio,0); // low_ratio
+  y += -87.47464536 * safe(flatness,0); // flatness
+  y += 69.03331565 * safe(band150300,0); // band_150_300
+  y += 0.05447627826 * safe(rolloff85,0); // rolloff85
+  y += 0.9720033273 * safe(peakCount,0); // peak_count
+  return clamp(y,30,95);
+}
+
 function analyzeSession(){
   const avg={};["fPeak","Q","tau","fMean","fStd","fVar","hollow","bw","highRatio","lowRatio","flatness","band50100","band100150","band150300","band300600","band6001000","centroid","rolloff85","rolloff95","peakCount","peak2Ratio","attackTime","decayRatio"].forEach(k=>{avg[k]=trimmedMean(tapFeatures.map(t=>t[k]));if(!Number.isFinite(avg[k]))avg[k]=getFallback(k);});
   const qScores=tapFeatures.map(t=>t.quality?.score??50), sigScore=trimmedMean(qScores);
@@ -571,11 +636,14 @@ function analyzeSession(){
   const band50100Use=safe(avg.band50100,0), band100150Use=safe(avg.band100150,0), band150300Use=safe(avg.band150300,0), band300600Use=safe(avg.band300600,0), band6001000Use=safe(avg.band6001000,0);
   const centroidUse=safe(avg.centroid,fMeanUse), rolloff85Use=safe(avg.rolloff85,300), rolloff95Use=safe(avg.rolloff95,500), peakCountUse=safe(avg.peakCount,1), peak2RatioUse=safe(avg.peak2Ratio,0), attackTimeUse=safe(avg.attackTime,0.08), decayRatioUse=safe(avg.decayRatio,0.25);
   const brixRaw=predictBrixAI(avg.fPeak,Quse,tauUsed,fStdUse,fVarUse,hollowIndexUse,bwUse,highRatioUse,lowRatioUse,flatnessUse,band50100Use,band100150Use,band150300Use,band300600Use,band6001000Use,centroidUse,rolloff85Use,rolloff95Use,peakCountUse,peak2RatioUse,attackTimeUse,decayRatioUse);
-  const brix=calibrateBrixField(brixRaw);
+  let brix=calibrateBrixField(brixRaw);
+  brix=calibrateBrixFieldV227(brix,Quse,fMeanUse,fStdUse,hollowIndexUse,lowRatioUse,flatnessUse,band150300Use,rolloff85Use,peakCountUse);
   const firmnessRaw=predictFirmnessAI(avg.fPeak,Quse,tauUsed,fStdUse,fVarUse,hollowIndexUse,bwUse,highRatioUse,lowRatioUse,flatnessUse,band50100Use,band100150Use,band150300Use,band300600Use,band6001000Use,centroidUse,rolloff85Use,rolloff95Use,peakCountUse,peak2RatioUse,attackTimeUse,decayRatioUse);
-  const firmness=calibrateFirmnessField(firmnessRaw);
+  let firmness=calibrateFirmnessField(firmnessRaw);
+  firmness=calibrateFirmnessFieldV227(firmness,Quse,fMeanUse,fStdUse,hollowIndexUse,lowRatioUse,flatnessUse,band150300Use,rolloff85Use,peakCountUse);
   const juiceRaw=predictJuiceAI(avg.fPeak,Quse,tauUsed,fStdUse,fVarUse,hollowIndexUse,bwUse,highRatioUse,lowRatioUse,flatnessUse,band50100Use,band100150Use,band150300Use,band300600Use,band6001000Use,centroidUse,rolloff85Use,rolloff95Use,peakCountUse,peak2RatioUse,attackTimeUse,decayRatioUse);
-  const juice=calibrateJuiceField(juiceRaw);
+  let juice=calibrateJuiceField(juiceRaw);
+  juice=calibrateJuiceFieldV227(juice,Quse,fMeanUse,fStdUse,hollowIndexUse,lowRatioUse,flatnessUse,band150300Use,rolloff85Use,peakCountUse);
   const hollowRawPercent=predictHollowAI(avg.fPeak,Quse,tauUsed,fStdUse,fVarUse,hollowIndexUse,bwUse,highRatioUse,lowRatioUse,flatnessUse,band50100Use,band100150Use,band150300Use,band300600Use,band6001000Use,centroidUse,rolloff85Use,rolloff95Use,peakCountUse,peak2RatioUse,attackTimeUse,decayRatioUse)*100;
   let hollowPercent=calibrateHollowField(hollowRawPercent);
   const ripeDistance=perfectRipeDistance(brix,firmness,juice,hollowPercent,Quse,tauUsed);
@@ -591,7 +659,7 @@ function analyzeSession(){
   // Recalibrate hollow after final ripeness group is known
   const hollowPercentField = calibrateHollowFieldV226(hollowRawPercent, hollowPercent, group);
   const hollowPercentOriginal = hollowPercent;
-  hollowPercent = hollowPercentField;
+  hollowPercent = calibrateHollowFieldV227(hollowPercentField);
 
   const ripe=ripenessFromGroup(group);
   const crispPct=crispPercent(firmness), crispText=crispLabel(crispPct), hollowText=hollowDisplayLabel(hollowPercent);
@@ -629,9 +697,9 @@ function analyzeSession(){
   document.getElementById("confVal").innerText=`${conf.toFixed(0)} %`;document.getElementById("groupVal").innerText=`ช่วงสุก: ${group}`;
   setBar("brixBar",brix/14*100);setBar("firmBar",crispPct);setBar("juiceBar",juice);setBar("hollowBar",100-hollowPercent*2.5);setBar("confBar",conf);
   document.getElementById("featureList").innerHTML=`
-    <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Brix raw: ${brixRaw.toFixed(2)} °Bx → calibrated: ${brix.toFixed(2)} °Bx</li><li>Firmness raw model: ${firmnessRaw.toFixed(1)} N → calibrated: ${firmness.toFixed(1)} N</li><li>Juice raw: ${juiceRaw.toFixed(1)}% → calibrated: ${juice.toFixed(1)}%</li><li>Hollow raw: ${hollowRawPercent.toFixed(1)}% → v22.5: ${hollowPercentOriginal.toFixed(1)}% → v22.6: ${hollowPercent.toFixed(1)}%</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Final ripeness group: ${group} (v22.6 field rule)</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
+    <li>Q: ${Quse.toFixed(2)}</li><li>tau: ${tauUsed.toFixed(3)}</li><li>f_peak: ${avg.fPeak.toFixed(1)} Hz</li><li>f_mean: ${fMeanUse.toFixed(1)} Hz</li><li>f_std: ${fStdUse.toFixed(1)} Hz</li><li>f_variance: ${fVarUse.toFixed(1)}</li><li>hollow_index: ${hollowIndexUse.toFixed(3)}</li><li>Brix raw: ${brixRaw.toFixed(2)} °Bx → calibrated: ${brix.toFixed(2)} °Bx</li><li>Firmness raw model: ${firmnessRaw.toFixed(1)} N → calibrated: ${firmness.toFixed(1)} N</li><li>Juice raw: ${juiceRaw.toFixed(1)}% → calibrated: ${juice.toFixed(1)}%</li><li>Hollow raw: ${hollowRawPercent.toFixed(1)}% → v22.5: ${hollowPercentOriginal.toFixed(1)}% → v22.6: ${hollowPercent.toFixed(1)}%</li><li>high_ratio: ${highRatioUse.toFixed(3)}</li><li>low_ratio: ${lowRatioUse.toFixed(3)}</li><li>flatness: ${flatnessUse.toFixed(3)}</li><li>rolloff85: ${rolloff85Use.toFixed(1)} Hz</li><li>peak count: ${peakCountUse.toFixed(0)}</li><li>low_ratio: ${avg.lowRatio.toFixed(3)}</li><li>flatness: ${avg.flatness.toFixed(3)}</li><li>Audio120 ripeness label: ${ripenessLabel120}</li><li>Final ripeness group: ${group} (v22.7 TEST5 rule)</li><li>Perfect ripe meter: ${ripeMeter.toFixed(0)}/100</li><li>คุณภาพสัญญาณ: ${sigLabel} (${sigScore.toFixed(0)}%)</li><li>Q spread: ${qSpread.toFixed(2)}</li><li>tau fallback: ${tauFallbackCount}/${NUM_TAPS}</li><li>สถานะผล: ${warnLowQuality ? "ใช้ได้แต่ควรวัดซ้ำเพื่อยืนยัน" : "ใช้ได้"}</li>`;
   saveHistory(ripe.label,brix,conf,melonScore,buyText,sigScore);
-  speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกเกิน", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
+  speakSummaryAI({ripenessText:(group==="C"||group==="B")?"แตงโมลูกนี้อยู่ในช่วงพอดีกิน":group==="D"?"แตงโมลูกนี้ใกล้สุก":group==="E"?"แตงโมลูกนี้ยังค่อนข้างดิบ":"แตงโมลูกนี้มีแนวโน้มสุกมาก", sweetnessText:sweetnessLabel(brix), crispText, juiceText:juiceLabel(juice), hollowText, qualityText});
   
   saveMeasurementDebug({
     timestamp: new Date().toISOString(),
@@ -688,7 +756,7 @@ function analyzeSession(){
     q_spread: Number(qSpread.toFixed(3)),
     tau_fallback_count: tauFallbackCount,
     measurement_status: warnLowQuality ? "ควรวัดซ้ำ" : "ใช้ได้",
-    model_version: "v22.6-ripeness-hollowfix"
+    model_version: "v22.7-test5-tuned"
   });
 
 

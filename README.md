@@ -58,3 +58,10 @@ Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟ
 - ใช้ rule จาก feature ที่เห็นชัด: band_150_300, Q, Brix, Firmness, Juice
 - ปรับ Hollow โดยคำนึงถึงหน่วยจริงใน Excel: 0.25 = 25%
 - Hollow ใช้ group-aware calibration: non-overripe ต่ำ, overripe scaling จาก hollow_raw
+
+
+## v22.7 TEST5 Tuned
+- Tuned from TEST5 field CSV 60 samples
+- New ripeness decision tree using f_mean, low_ratio, flatness, f_peak, firmness
+- Linear field correction for Brix/Firmness/Juice
+- Hollow offset +0.65 after v22.6 correction
