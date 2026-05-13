@@ -43,3 +43,11 @@ Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟ
 - ปุ่มแชร์ผลลัพธ์เปลี่ยนเป็น แชร์/Export ผล
 - กดปุ่มเดียวแล้วแชร์ข้อความสรุป พร้อมดาวน์โหลด CSV ข้อมูลดิบทั้งหมด
 - ยังมีปุ่มล้างข้อมูล CSV ใกล้ Debug
+
+## v22.5 Field Calibration
+- Calibrated with field-test 70 samples
+- Brix +3.447
+- Juice +10.396
+- Hollow -3.856
+- Firmness conservative correction -5.5 N
+- Export CSV keeps raw and calibrated values
