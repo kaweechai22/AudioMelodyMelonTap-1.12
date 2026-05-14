@@ -48,7 +48,7 @@
 <body>
 <div class="wrap">
   <h1>MelodyMelonTap 🎤🍉</h1>
-  <div class="version">Version: v2026.05.14-hybrid-audio120-v24.1-boundary-hint</div>
+  <div class="version">Version: v2026.05.14-hybrid-audio120-v24.2-hollow-warning-voice</div>
   <div class="voiceNote">🎙 AI Voice Summary อ่านสรุปผลแบบภาษาคน ไม่อ่านตัวเลขยาว</div>
 
   <div class="card">
@@ -832,16 +832,78 @@ function showRetry(conf,sigLabel,sigScore,qSpread,tauSpread,tauFallbackCount){
 }
 
 
-function speakSummaryAI(summary){
-  const text =
-    `${summary.ripenessText}, ` +
-    `${summary.sweetnessText}, ` +
-    `${summary.crispText}, ` +
-    `${summary.juiceText}, ` +
-    `${summary.hollowText}, ` +
-    `${summary.qualityText}`;
-  speakText(text);
+
+// ===== Hollow Warning Voice v24.2 =====
+function getHollowWarningText(hollowText){
+  if(!hollowText) return "";
+  if(hollowText.includes("มีโพรงมาก")){
+    return "คำเตือน แตงโมลูกนี้มีโพรงภายในค่อนข้างมาก";
+  }
+  if(hollowText.includes("เริ่มมีโพรง")){
+    return "คำเตือน แตงโมลูกนี้เริ่มมีโพรงภายใน";
+  }
+  return "";
 }
+
+function playWarningBeep(level="medium"){
+  try{
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+
+    const beep = (freq, start, duration, gainValue) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(gainValue, ctx.currentTime + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration + 0.03);
+    };
+
+    if(level === "high"){
+      beep(660, 0.00, 0.16, 0.08);
+      beep(660, 0.24, 0.16, 0.08);
+    }else{
+      beep(660, 0.00, 0.18, 0.07);
+    }
+
+    setTimeout(() => ctx.close().catch(()=>{}), level === "high" ? 900 : 600);
+  }catch(e){
+    console.log(e);
+  }
+}
+
+
+function speakSummaryAI(summary){
+  const hollowWarning = getHollowWarningText(summary.hollowText);
+  const parts = [
+    summary.ripenessText,
+    summary.sweetnessText,
+    summary.crispText,
+    summary.juiceText
+  ];
+
+  if(hollowWarning){
+    parts.push(hollowWarning);
+  }
+
+  parts.push(summary.qualityText);
+
+  const text = parts.filter(Boolean).join(", ");
+
+  if(hollowWarning){
+    const level = hollowWarning.includes("ค่อนข้างมาก") ? "high" : "medium";
+    playWarningBeep(level);
+    setTimeout(() => speakText(text), level === "high" ? 650 : 420);
+  }else{
+    speakText(text);
+  }
+}
+
 
 function speakText(text){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="th-TH";u.rate = 0.96;u.pitch = 1.0;u.volume=1;const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().includes("th"));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){console.log(e);}}
 function updateWatermelonColor(flesh){document.getElementById("watermelon").style.background=`radial-gradient(circle at center, ${flesh} 0 68%, #2e7d32 69% 100%)`;}
