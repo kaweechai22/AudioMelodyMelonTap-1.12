@@ -73,3 +73,8 @@ Clean rebuild: ตัดโค้ดซ้ำ/โค้ดเก่า/เอฟ
 - ปรับคำหวาน: หวานอ่อน→หวาน, หวานดี→หวานมาก, หวานที่สุด→หวานเจี๊ยบ
 - เปลี่ยนคำสุกมากเป็นสุกเกิน
 - Tuned from TEST6 3-class field data
+
+## v22.9 Ripeness Color Tune
+- เปลี่ยนสีระดับ “สุกเกิน” เป็นสีเทา
+- ปรับ logic ความสุก 3 ช่วงให้มี buffer zone
+- ใช้ low_ratio, high_ratio, Brix, Firmness, Juice, Hollow ร่วมกัน
